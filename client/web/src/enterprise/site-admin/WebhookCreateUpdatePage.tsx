@@ -8,9 +8,9 @@ import { RouteComponentProps } from 'react-router'
 import { useMutation, useQuery } from '@sourcegraph/http-client'
 import { Alert, Button, ButtonLink, H2, Input, Select, ErrorAlert, Form } from '@sourcegraph/wildcard'
 
-import { EXTERNAL_SERVICES } from '../components/externalServices/backend'
-import { defaultExternalServices } from '../components/externalServices/externalServices'
-import { ConnectionLoading } from '../components/FilteredConnection/ui'
+import { EXTERNAL_SERVICES } from '../../components/externalServices/backend'
+import { defaultExternalServices } from '../../components/externalServices/externalServices'
+import { ConnectionLoading } from '../../components/FilteredConnection/ui'
 import {
     CreateWebhookResult,
     CreateWebhookVariables,
@@ -20,9 +20,9 @@ import {
     UpdateWebhookResult,
     UpdateWebhookVariables,
     WebhookFields,
-} from '../graphql-operations'
+} from '../../graphql-operations'
 
-import { CREATE_WEBHOOK_QUERY, UPDATE_WEBHOOK_QUERY } from './backend'
+import { CREATE_WEBHOOK_QUERY, UPDATE_WEBHOOK_QUERY } from '../../site-admin/backend'
 
 import styles from './WebhookCreateUpdatePage.module.scss'
 

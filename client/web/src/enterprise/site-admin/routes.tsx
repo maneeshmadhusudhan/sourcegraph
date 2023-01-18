@@ -183,5 +183,27 @@ export const enterpriseSiteAdminAreaRoutes: readonly SiteAdminAreaRoute[] = (
             ),
             condition: () => Boolean(window.context?.executorsEnabled),
         },
+
+        // Webhook routes
+        {
+            path: '/webhooks',
+            exact: true,
+            render: lazyComponent(() => import('./SiteAdminWebhooksPage'), 'SiteAdminWebhooksPage'),
+        },
+        {
+            path: '/webhooks/create',
+            exact: true,
+            render: lazyComponent(() => import('./SiteAdminWebhookCreatePage'), 'SiteAdminWebhookCreatePage'),
+        },
+        {
+            path: '/webhooks/:id',
+            exact: true,
+            render: lazyComponent(() => import('./SiteAdminWebhookPage'), 'SiteAdminWebhookPage'),
+        },
+        {
+            path: '/webhooks/:id/edit',
+            exact: true,
+            render: lazyComponent(() => import('./SiteAdminWebhookUpdatePage'), 'SiteAdminWebhookUpdatePage'),
+        },
     ] as readonly (SiteAdminAreaRoute | undefined)[]
 ).filter(Boolean) as readonly SiteAdminAreaRoute[]
