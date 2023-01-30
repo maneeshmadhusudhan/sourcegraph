@@ -13,7 +13,7 @@ import (
 )
 
 // The database is already seeded with two roles:
-// - DEFAULT
+// - USER
 // - SITE_ADMINISTRATOR
 //
 // These roles come by default on any sourcegraph instance and will always exist in the database,
