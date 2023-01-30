@@ -58,3 +58,14 @@ gazelle(
     ],
     command = "update-repos",
 )
+
+js_library(
+    name = "postcss_config_js",
+    srcs = ["postcss.config.js"],
+    deps = [
+        "//:node_modules/autoprefixer",
+        "//:node_modules/postcss-custom-media",
+        "//:node_modules/postcss-focus-visible",
+        "//:node_modules/postcss-inset",
+    ],
+)
