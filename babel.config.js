@@ -6,7 +6,6 @@ const logger = require('signale')
 
 /** @type {import('@babel/core').ConfigFunction} */
 module.exports = api => {
-  const isTest = api.env('test')
   api.cache.forever()
 
   /**
@@ -26,7 +25,9 @@ module.exports = api => {
         '@babel/preset-env',
         {
           // Node (used for testing) doesn't support modules, so compile to CommonJS for testing.
-          modules: isTest ? 'commonjs' : false,
+          modules: false,
+          // TODO(bazel): outside bazel support
+          // modules:  api.env('test') ? 'commonjs' : false,
           bugfixes: true,
           useBuiltIns: 'entry',
           include: [
