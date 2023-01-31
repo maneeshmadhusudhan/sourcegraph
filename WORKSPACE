@@ -33,11 +33,15 @@ http_archive(
     url = "https://github.com/aspect-build/rules_ts/archive/refs/tags/v1.1.0.tar.gz",
 )
 
-http_archive(
+# http_archive(
+#     name = "aspect_rules_jest",
+#     sha256 = "0ea90fc5ed2b657f22c447494b2bfc563008b47900974b1e092e092cb1999a01",
+#     strip_prefix = "rules_jest-0.14.4",
+#     url = "https://github.com/aspect-build/rules_jest/archive/refs/tags/v0.14.4.tar.gz",
+# )
+local_repository(
     name = "aspect_rules_jest",
-    sha256 = "0ea90fc5ed2b657f22c447494b2bfc563008b47900974b1e092e092cb1999a01",
-    strip_prefix = "rules_jest-0.14.4",
-    url = "https://github.com/aspect-build/rules_jest/archive/refs/tags/v0.14.4.tar.gz",
+    path = "../rules_jest",
 )
 
 http_archive(
