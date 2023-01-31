@@ -47,9 +47,9 @@ type PermsStore interface {
 	// LoadRepoPermissions loads stored repository permissions into p. An
 	// ErrPermsNotFound is returned when there are no valid permissions available.
 	LoadRepoPermissions(ctx context.Context, p *authz.RepoPermissions) error
-	// SetSrcPermissions performs a full update for p, new rows for pairs of user_id, repo_id
+	// SetUserRepoPermissions performs a full update for p, new rows for pairs of user_id, repo_id
 	// found in p will be upserted and pairs of user_id, repo_id no longer in p will be removed.
-	// This method updates both `src_permissions` table.
+	// This method updates both `user_repo_permissions` table.
 	//
 	// Example input:
 	// p := []UserPermissions{{
@@ -64,19 +64,19 @@ type PermsStore interface {
 	// isUserSync := true
 	//
 	// Original table state:
-	//   user_id | repo_id | ext_account_id |           created_at |           updated_at | source
+	//   user_id | repo_id | user_external_account_id |           created_at |           updated_at | source
 	//  ---------+------------+-------------+-----------------+------------+-----------------------
 	//         1 |       1 |             42 | 2022-06-01T10:42:53Z | 2023-01-27T06:12:33Z | 'sync'
 	//         1 |       2 |             42 | 2022-06-01T10:42:53Z | 2023-01-27T09:15:06Z | 'sync'
 	//
 	// New table state:
-	//   user_id | repo_id | ext_account_id |           created_at |           updated_at | source
+	//   user_id | repo_id | user_external_account_id |           created_at |           updated_at | source
 	//  ---------+------------+-------------+-----------------+------------+-----------------------
 	//         1 |       1 |             42 |          <Unchanged> | 2023-01-28T14:24:12Z | 'sync'
 	//         1 |     233 |             42 | 2023-01-28T14:24:15Z | 2023-01-28T14:24:12Z | 'sync'
 	//
 	// So one repo {id:2} was removed and one was added {id:233} to the user
-	SetSrcPermissions(ctx context.Context, p []authz.SrcPermission, entity authz.PermissionEntity, source string) error
+	SetUserRepoPermissions(ctx context.Context, p []authz.Permission, entity authz.PermissionEntity, source string) error
 	// SetUserPermissions performs a full update for p, new object IDs found in p
 	// will be upserted and object IDs no longer in p will be removed. This method
 	// updates both `user_permissions` and `repo_permissions` tables.
@@ -368,8 +368,8 @@ func (s *permsStore) LoadRepoPermissions(ctx context.Context, p *authz.RepoPermi
 	return nil
 }
 
-func (s *permsStore) SetSrcPermissions(ctx context.Context, p []authz.SrcPermission, entity authz.PermissionEntity, source string) (err error) {
-	ctx, save := s.observe(ctx, "SetSrcPermissions", "")
+func (s *permsStore) SetUserRepoPermissions(ctx context.Context, p []authz.Permission, entity authz.PermissionEntity, source string) (err error) {
+	ctx, save := s.observe(ctx, "SetUserRepoPermissions", "")
 	defer func() {
 		f := []otlog.Field{}
 		for _, permission := range p {
@@ -386,35 +386,35 @@ func (s *permsStore) SetSrcPermissions(ctx context.Context, p []authz.SrcPermiss
 	defer func() { err = txs.Done(err) }()
 
 	// Update the rows with new data
-	timestamps, err := txs.upsertSrcPermissions(ctx, p, source)
+	timestamps, err := txs.upsertUserRepoPermissions(ctx, p, source)
 	if err != nil {
-		return errors.Wrap(err, "upserting new src permissions")
+		return errors.Wrap(err, "upserting new user repo permissions")
 	}
 
 	// Now delete rows that were updated before. This will delete all rows, that were not updated on the last update
 	// which was tried above.
-	err = txs.deleteOldSrcPermissions(ctx, entity, timestamps[0])
+	err = txs.deleteOldUserRepoPermissions(ctx, entity, timestamps[0])
 	if err != nil {
-		return errors.Wrap(err, "removing old src permissions")
+		return errors.Wrap(err, "removing old user repo permissions")
 	}
 
 	return nil
 }
 
 // TODO: maybe not needed at all in the end, check references
-// loadSrcPermissions is a method that scans either user_id or repo_id from the src_permissions table, depending on the entity:
+// loadUserRepoPermissions is a method that scans either user_id or repo_id from the user_repo_permissions table, depending on the entity:
 // []int32 (ids).
-func (s *permsStore) loadSrcPermissions(ctx context.Context, entity authz.PermissionEntity) (ids []int32, err error) {
+func (s *permsStore) loadUserRepoPermissions(ctx context.Context, entity authz.PermissionEntity) (ids []int32, err error) {
 	format := `
 SELECT user_id
-FROM src_permissions
+FROM user_repo_permissions
 WHERE user_id = %d
 `
 	id := entity.UserID
 	if entity.RepoID > 0 {
 		format = `
 SELECT repo_id
-FROM src_permissions
+FROM user_repo_permissions
 WHERE repo_id = %d
 `
 		id = entity.RepoID
@@ -455,12 +455,12 @@ WHERE repo_id = %d
 	return ids, nil
 }
 
-// upsertSrcPermissions upserts multiple rows of src permissions. It also updates the updated_at and source
+// upsertUserRepoPermissions upserts multiple rows of permissions. It also updates the updated_at and source
 // columns for all the rows that match the permissions input parameter
-func (s *permsStore) upsertSrcPermissions(ctx context.Context, permissions []authz.SrcPermission, source string) (t []time.Time, err error) {
+func (s *permsStore) upsertUserRepoPermissions(ctx context.Context, permissions []authz.Permission, source string) (t []time.Time, err error) {
 	const format = `
-INSERT INTO src_permissions
-	(user_id, ext_account_id, repo_id, created_at, updated_at, source)
+INSERT INTO user_repo_permissions
+	(user_id, user_external_account_id, repo_id, created_at, updated_at, source)
 VALUES
 	%s
 ON CONFLICT (user_id, repo_id)
@@ -496,11 +496,11 @@ RETURNING updated_at;
 	return basestore.ScanTimes(rows, err)
 }
 
-// upsertSrcPermissions upserts multiple rows of src permissions. It also updates the updated_at and source
+// deleteOldUserRepoPermissions deletes multiple rows of permissions. It also updates the updated_at and source
 // columns for all the rows that match the permissions input parameter
-func (s *permsStore) deleteOldSrcPermissions(ctx context.Context, entity authz.PermissionEntity, before time.Time) error {
+func (s *permsStore) deleteOldUserRepoPermissions(ctx context.Context, entity authz.PermissionEntity, before time.Time) error {
 	const format = `
-DELETE FROM src_permissions
+DELETE FROM user_repo_permissions
 WHERE
 	%s
 	AND
@@ -510,7 +510,7 @@ WHERE
 	if entity.UserID > 0 {
 		where = sqlf.Sprintf("user_id = %d", entity.UserID)
 		if entity.ExternalAccountID > 0 {
-			where = sqlf.Sprintf("%s AND ext_account_id = %d", where, entity.ExternalAccountID)
+			where = sqlf.Sprintf("%s AND user_external_account_id = %d", where, entity.ExternalAccountID)
 		}
 	}
 	if entity.RepoID > 0 {

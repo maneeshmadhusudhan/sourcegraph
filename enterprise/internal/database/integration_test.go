@@ -43,7 +43,7 @@ func TestIntegration_PermsStore(t *testing.T) {
 		{"FetchReposByUserAndExternalService", testPermsStore_FetchReposByUserAndExternalService(db)},
 		{"LoadRepoPermissions", testPermsStore_LoadRepoPermissions(db)},
 		{"SetUserPermissions", testPermsStore_SetUserPermissions(db)},
-		{"SetSrcPermissions", testPermsStore_SetSrcPermissions(db)},
+		{"SetUserRepoPermissions", testPermsStore_SetUserRepoPermissions(db)},
 		{"SetRepoPermissions", testPermsStore_SetRepoPermissions(db)},
 		{"SetRepoPermissionsUnrestricted", testPermsStore_SetRepoPermissionsUnrestricted(db)},
 		{"TouchRepoPermissions", testPermsStore_TouchRepoPermissions(db)},
