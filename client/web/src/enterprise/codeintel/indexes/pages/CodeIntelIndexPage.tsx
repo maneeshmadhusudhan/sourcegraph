@@ -2,6 +2,7 @@ import { FunctionComponent, useCallback, useEffect, useMemo, useState } from 're
 
 import { useApolloClient } from '@apollo/client'
 import { Redirect } from 'react-router'
+import { useNavigate, useParams } from 'react-router-dom-v5-compat'
 import { takeWhile } from 'rxjs/operators'
 
 import { ErrorLike, isErrorLike } from '@sourcegraph/common'
@@ -19,7 +20,6 @@ import { CodeIntelIndexMeta } from '../components/CodeIntelIndexMeta'
 import { CodeIntelIndexTimeline } from '../components/CodeIntelIndexTimeline'
 import { queryLisfIndex as defaultQueryLsifIndex } from '../hooks/queryLisfIndex'
 import { useDeleteLsifIndex } from '../hooks/useDeleteLsifIndex'
-import { useNavigate, useParams } from 'react-router-dom-v5-compat'
 
 export interface CodeIntelIndexPageProps extends TelemetryProps {
     authenticatedUser: AuthenticatedUser | null

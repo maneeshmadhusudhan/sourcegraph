@@ -4,6 +4,7 @@ import { useApolloClient } from '@apollo/client'
 import { mdiInformationOutline, mdiMapSearch } from '@mdi/js'
 import classNames from 'classnames'
 import { Redirect } from 'react-router'
+import { useNavigate, useParams } from 'react-router-dom-v5-compat'
 import { Observable } from 'rxjs'
 import { takeWhile } from 'rxjs/operators'
 
@@ -51,7 +52,6 @@ import {
 import { useDeleteLsifUpload } from '../hooks/useDeleteLsifUpload'
 
 import styles from './CodeIntelUploadPage.module.scss'
-import { useNavigate, useParams } from 'react-router-dom-v5-compat'
 
 export interface CodeIntelUploadPageProps extends TelemetryProps {
     authenticatedUser: AuthenticatedUser | null
