@@ -3,7 +3,7 @@ import { FunctionComponent, useCallback, useEffect, useMemo, useState } from 're
 import { useApolloClient } from '@apollo/client'
 import { mdiInformationOutline, mdiMapSearch } from '@mdi/js'
 import classNames from 'classnames'
-import { Redirect, RouteComponentProps } from 'react-router'
+import { Redirect } from 'react-router'
 import { Observable } from 'rxjs'
 import { takeWhile } from 'rxjs/operators'
 
@@ -51,8 +51,9 @@ import {
 import { useDeleteLsifUpload } from '../hooks/useDeleteLsifUpload'
 
 import styles from './CodeIntelUploadPage.module.scss'
+import { useNavigate, useParams } from 'react-router-dom-v5-compat'
 
-export interface CodeIntelUploadPageProps extends RouteComponentProps<{ id: string }>, TelemetryProps {
+export interface CodeIntelUploadPageProps extends TelemetryProps {
     authenticatedUser: AuthenticatedUser | null
     queryLisfUploadFields?: typeof defaultQueryLisfUploadFields
     queryLsifUploadsList?: typeof defaultQueryLsifUploadsList
@@ -76,18 +77,16 @@ enum RetentionPolicyMatcherState {
 }
 
 export const CodeIntelUploadPage: FunctionComponent<React.PropsWithChildren<CodeIntelUploadPageProps>> = ({
-    match: {
-        params: { id },
-    },
     authenticatedUser,
     queryLisfUploadFields = defaultQueryLisfUploadFields,
     queryLsifUploadsList = defaultQueryLsifUploadsList,
     queryRetentionMatches = defaultQueryRetentionMatches,
     telemetryService,
     now,
-    history,
     ...props
 }) => {
+    const { id = '' } = useParams<{ id: string }>()
+    const navigate = useNavigate()
     useEffect(() => telemetryService.logViewEvent('CodeIntelUpload'), [telemetryService])
 
     const apolloClient = useApolloClient()
@@ -131,22 +130,28 @@ export const CodeIntelUploadPage: FunctionComponent<React.PropsWithChildren<Code
                 update: cache => cache.modify({ fields: { node: () => {} } }),
             })
             setDeletionOrError('deleted')
-            history.push({
-                state: {
-                    modal: 'SUCCESS',
-                    message: `Upload for commit ${description} is deleting.`,
-                },
-            })
+            navigate(
+                {},
+                {
+                    state: {
+                        modal: 'SUCCESS',
+                        message: `Upload for commit ${description} is deleting.`,
+                    },
+                }
+            )
         } catch (error) {
             setDeletionOrError(error)
-            history.push({
-                state: {
-                    modal: 'ERROR',
-                    message: `There was an error while deleting upload for commit ${description}.`,
-                },
-            })
+            navigate(
+                {},
+                {
+                    state: {
+                        modal: 'ERROR',
+                        message: `There was an error while deleting upload for commit ${description}.`,
+                    },
+                }
+            )
         }
-    }, [id, uploadOrError, handleDeleteLsifUpload, history])
+    }, [id, uploadOrError, handleDeleteLsifUpload, navigate])
 
     const queryDependencies = useCallback(
         (args: FilteredConnectionQueryArguments): Observable<LsifUploadConnectionFields> => {
